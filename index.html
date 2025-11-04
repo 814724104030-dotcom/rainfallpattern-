@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainfall Pattern Visualization in India</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e5799 0%, #207cca 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        nav {
+            background-color: #2c3e50;
+            padding: 1rem 0;
+        }
+        
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+        }
+        
+        nav li {
+            margin: 0 15px;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav a:hover, nav a.active {
+            background-color: #3498db;
+        }
+        
+        .section {
+            padding: 3rem 0;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+        
+        #map {
+            height: 500px;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #3498db;
+            margin: 0.5rem 0;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        select, button {
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 1rem;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .region-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #e8f4fc;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            nav li {
+                margin: 5px 0;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .control-group {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Rainfall Pattern Visualization in India</h1>
+            <p class="subtitle">Analyzing precipitation trends across different regions and seasons</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#" class="active">Overview</a></li>
+                <li><a href="#">Regional Analysis</a></li>
+                <li><a href="#">Seasonal Trends</a></li>
+                <li><a href="#">Historical Data</a></li>
+                <li><a href="#">About</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main class="container">
+        <section class="section">
+            <h2 class="section-title">Annual Rainfall Overview</h2>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="year-select">Select Year:</label>
+                    <select id="year-select">
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                        <option value="2020">2020</option>
+                        <option value="2019">2019</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="region-select">Select Region:</label>
+                    <select id="region-select">
+                        <option value="all">All India</option>
+                        <option value="north">Northern India</option>
+                        <option value="south">Southern India</option>
+                        <option value="east">Eastern India</option>
+                        <option value="west">Western India</option>
+                        <option value="northeast">Northeast India</option>
+                    </select>
+                </div>
+                
+                <button id="update-btn">Update Visualization</button>
+            </div>
+            
+            <div class="card">
+                <div class="chart-container">
+                    <canvas id="annualRainfallChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Average Annual Rainfall</div>
+                    <div class="stat-value">1,170 mm</div>
+                    <div class="stat-desc">National Average</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">Highest Rainfall Region</div>
+                    <div class="stat-value">Mawsynram</div>
+                    <div class="stat-desc">11,871 mm annually</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">Lowest Rainfall Region</div>
+                    <div class="stat-value">Jaisalmer</div>
+                    <div class="stat-desc">209 mm annually</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-label">Monsoon Contribution</div>
+                    <div class="stat-value">75%</div>
+                    <div class="stat-desc">of annual rainfall</div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2 class="section-title">Regional Rainfall Distribution</h2>
+            
+            <div class="card">
+                <div id="map"></div>
+            </div>
+            
+            <div class="region-info">
+                <h3>Regional Insights</h3>
+                <p>India's rainfall patterns vary significantly across regions. The Western Ghats and Northeast India receive the highest rainfall, while the Thar Desert in the northwest is the driest region. The monsoon season (June-September) accounts for most of the annual precipitation across the country.</p>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2 class="section-title">Seasonal Rainfall Patterns</h2>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="season-select">Select Season:</label>
+                    <select id="season-select">
+                        <option value="winter">Winter (Dec-Feb)</option>
+                        <option value="premonsoon">Pre-Monsoon (Mar-May)</option>
+                        <option value="monsoon">Monsoon (Jun-Sep)</option>
+                        <option value="postmonsoon">Post-Monsoon (Oct-Nov)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="chart-container">
+                    <canvas id="seasonalChart"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2 class="section-title">Monthly Rainfall Trends</h2>
+            
+            <div class="card">
+                <div class="chart-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>Rainfall Pattern Visualization in India - Mini Project</p>
+            <p>Data Source: Indian Meteorological Department</p>
+            <p>&copy; 2023 All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([20.5937, 78.9629], 5);
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Add some sample markers for demonstration
+        const rainfallData = [
+            {lat: 28.6139, lng: 77.2090, city: "Delhi", rainfall: 797},
+            {lat: 19.0760, lng: 72.8777, city: "Mumbai", rainfall: 2422},
+            {lat: 13.0827, lng: 80.2707, city: "Chennai", rainfall: 1407},
+            {lat: 22.5726, lng: 88.3639, city: "Kolkata", rainfall: 1800},
+            {lat: 12.9716, lng: 77.5946, city: "Bangalore", rainfall: 859},
+            {lat: 25.3176, lng: 82.9739, city: "Varanasi", rainfall: 1110},
+            {lat: 26.9124, lng: 75.7873, city: "Jaipur", rainfall: 556},
+            {lat: 15.2993, lng: 74.1240, city: "Goa", rainfall: 2956}
+        ];
+        
+        rainfallData.forEach(data => {
+            const color = getColorForRainfall(data.rainfall);
+            L.circleMarker([data.lat, data.lng], {
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.7,
+                radius: 8
+            }).addTo(map).bindPopup(`<b>${data.city}</b><br>Rainfall: ${data.rainfall} mm`);
+        });
+        
+        function getColorForRainfall(rainfall) {
+            if (rainfall < 500) return '#ffffcc';
+            if (rainfall < 1000) return '#a1dab4';
+            if (rainfall < 1500) return '#41b6c4';
+            if (rainfall < 2000) return '#2c7fb8';
+            return '#253494';
+        }
+        
+        // Initialize charts
+        const annualCtx = document.getElementById('annualRainfallChart').getContext('2d');
+        const annualChart = new Chart(annualCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Northern', 'Southern', 'Eastern', 'Western', 'Northeastern'],
+                datasets: [{
+                    label: 'Average Annual Rainfall (mm)',
+                    data: [800, 1200, 1500, 900, 2500],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(255, 99, 132, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Rainfall (mm)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        const seasonalCtx = document.getElementById('seasonalChart').getContext('2d');
+        const seasonalChart = new Chart(seasonalCtx, {
+            type: 'line',
+            data: {
+                labels: ['Northern', 'Southern', 'Eastern', 'Western', 'Northeastern'],
+                datasets: [
+                    {
+                        label: 'Winter',
+                        data: [50, 60, 40, 30, 80],
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Pre-Monsoon',
+                        data: [80, 120, 150, 90, 200],
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Monsoon',
+                        data: [600, 900, 1200, 700, 2100],
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Post-Monsoon',
+                        data: [70, 120, 110, 80, 120],
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Rainfall (mm)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        const monthlyChart = new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [
+                    {
+                        label: 'Northern India',
+                        data: [20, 25, 30, 20, 40, 120, 280, 260, 150, 30, 10, 15],
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                    },
+                    {
+                        label: 'Southern India',
+                        data: [15, 10, 25, 50, 100, 150, 200, 180, 160, 200, 150, 60],
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Rainfall (mm)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Update button functionality
+        document.getElementById('update-btn').addEventListener('click', function() {
+            alert('Visualization updated with selected parameters!');
+            // In a real implementation, this would fetch new data and update charts
+        });
+    </script>
+</body>
+</html>
